@@ -13,5 +13,7 @@ struct VacationInVegasApp: App {
         WindowGroup {
             ContentView()
         }
+        //to specify to use real model container while running the app 
+        .modelContainer(for: Place.self)
     }
 }
