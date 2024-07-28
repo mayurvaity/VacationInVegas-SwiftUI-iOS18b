@@ -9,16 +9,23 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        TabView {
+            //places tab
+            Tab("Places", systemImage: "photo") {
+                PlaceListView()
+            }
+            
+            //trip history tab
+            Tab("Trip History", systemImage: "chart.line.uptrend.xyaxis") {
+                TripChartView()
+            }
         }
-        .padding()
+        .preferredColorScheme(.dark)
     }
 }
 
 #Preview {
     ContentView()
+        .modelContainer(Place.preview) //need to pass preview data container
+    //while running the app, it will get data passed in modelcontainer at "VacationInVegasApp" file
 }
