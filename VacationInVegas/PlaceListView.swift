@@ -7,8 +7,9 @@
 
 import SwiftUI
 import SwiftData
+import MapKit
 
-struct PlaceList: View {
+struct PlaceListView: View {
     //@Query - to query and get data we got from model container linked to this
     //sort: \Place.name -  to sort by name of the place
     @Query(sort: \Place.name) private var places: [Place]
@@ -18,8 +19,11 @@ struct PlaceList: View {
     
     //var to store search text from search bar
     @State private var searchText = ""
-    
+    //var to manage interested filter
     @State private var filterByInterested = false
+    
+    //namespace id to be used in transition from nav link to destination vw
+    @Namespace var namespace
     
     //predicate - is a filter
     private var predicate: Predicate<Place> {
@@ -47,25 +51,38 @@ struct PlaceList: View {
             //filter - getting data by applying filters (predicate)
             //if it returns nil then taking all the dta from "places" obj
             List((try? places.filter(predicate)) ?? places) { place in
-                HStack {
-                    //hotel image
-                    place.image
-                        .resizable()
-                        .scaledToFit()
-                        .clipShape(.rect(cornerRadius: 7))
-                        .frame(width: 100, height: 100)
-                    
-                    //hotel name
-                    Text(place.name)
-                    
-                    Spacer()
-                    
-                    //star to indicate interested place
-                    if place.interested {
-                        Image(systemName: "star.fill")
-                            .foregroundStyle(.yellow)
-                            .padding(.trailing)
+                //NavigationLink - to make rows in the list clickable
+                NavigationLink(value: place) {
+                    HStack {
+                        //hotel image
+                        place.image
+                            .resizable()
+                            .scaledToFit()
+                            .clipShape(.rect(cornerRadius: 7))
+                            .frame(width: 100, height: 100)
+                        
+                        //hotel name
+                        Text(place.name)
+                        
+                        Spacer()
+                        
+                        //star to indicate interested place
+                        if place.interested {
+                            Image(systemName: "star.fill")
+                                .foregroundStyle(.yellow)
+                                .padding(.trailing)
+                        }
                     }
+                }
+                //for animation on tapping any of the nav link (pt 1)
+                .matchedTransitionSource(id: 1, in: namespace)
+                //swipe right to change interested property
+                .swipeActions(edge: .leading) {
+                    //name of the button based on interested prop 
+                    Button(place.interested ? "Interested" : "Not Interested", systemImage: "star") {
+                        place.interested.toggle()
+                    }
+                    .tint(place.interested ? .yellow : .gray) //color based on interested prop
                 }
             }
             //to add navigation title
@@ -74,6 +91,21 @@ struct PlaceList: View {
             .searchable(text: $searchText, prompt: "Find a place")
             //to apply animation while filtering list
             .animation(.default, value: searchText)
+            //navigationDestination - to specify which vw to open when clicked on a row in nav stack
+            //for - to specify obj type we receive when tapped on a row
+            .navigationDestination(for: Place.self) { place in
+                //to show mapView
+                MapView(place: place,
+                        position: .camera(MapCamera(
+                            centerCoordinate: place.location,
+                            distance: 1000, //camera position to be 1000ft abv ground
+                            heading: 250, //angle from which u wanna be looking at it from
+                            pitch: 80 //another thing to be with angle
+                        ))
+                )
+                //for animation on tapping any of the nav link (pt 2)
+                .navigationTransition(.zoom(sourceID: 1, in: namespace))
+            }
             //adding toolbar items (button),
             //to toggle showImages property, to open showImages vw
             .toolbar {
@@ -102,6 +134,6 @@ struct PlaceList: View {
 }
 
 #Preview {
-    PlaceList()
+    PlaceListView()
         .modelContainer(Place.preview) //to use preview model container
 }

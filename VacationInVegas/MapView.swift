@@ -33,6 +33,7 @@ struct MapView: View {
                 }
             }
         }
+        .toolbarBackgroundVisibility(.automatic) //to remove white bg of navbar when opening this vw 
     }
 }
 
